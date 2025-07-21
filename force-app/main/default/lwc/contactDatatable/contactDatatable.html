@@ -2,8 +2,15 @@
     <div style="height: 250px;">
         <lightning-datatable
             key-field="employeeId"
-            data={employeeData}
-            columns={employeeColumns}>
+            data={contacts}
+            columns={contactColumns}
+            onrowaction={handleRowAction}
+            onsort={handleSort}
+            sorted-by={sortedBy}
+            sorted-direction={sortedDirection}
+            default-sort-direction={defaultSortDirection}
+            show-row-number-column
+            hide-checkbox-column>
         </lightning-datatable>
     </div>
 </template>

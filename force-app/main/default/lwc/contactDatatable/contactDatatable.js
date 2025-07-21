@@ -1,68 +1,71 @@
 import { LightningElement } from 'lwc';
-import getContacts from '@salesforce/apex/ContactDatatableController.getContacts';
 
 export default class ContactDatatable extends LightningElement {
 
-    // * Table Columns
-    contactColumns = [
-        {
-            label: 'Name',
-            fieldName: 'Name'
-        },
-        {
-            label: 'Account Name',
-            fieldName: 'AccountName'
-        },
-        {
-            label: 'Phone',
-            fieldName: 'Phone'
-        },
-        {
-            label: 'Email',
-            fieldName: 'Email'
-        },
-        {
-            label: 'Street',
-            fieldName: 'street'
-        },
-        {
-            label: 'City',
-            fieldName: 'city'
-        },
-        {
-            label: 'State',
-            fieldName: 'state'
-        },
-        {
-            label: 'Country',
-            fieldName: 'country'
-        },
-        {
-            label: 'PostalCode',
-            fieldName: 'postalCode'
-        }
+    employeeColumns = [
+        { label: 'Employee Id', fieldName: 'employeeId' },
+        { label: 'First Name', fieldName: 'firstName' },
+        { label: 'Last Name', fieldName: 'lastName' },
+        { label: 'Phone Number', fieldName: 'employeePhone', type: 'phone' },
+        { label: 'Email Address', fieldName: 'employeeEmail', type: 'email' }
     ];
 
-    // * Table Data
-    contacts = [];
-
-    // * This method will be called when the component is inserted in the DOM
-    connectedCallback() {
-
-        // * Querying contacts
-        getContacts()
-        .then(contacts => {
-            contacts.forEach(contact => {
-                contact.AccountName = contact.Account?.Name;
-                contact.street = contact.MailingAddress?.street;
-                contact.city = contact.MailingAddress?.city;
-                contact.state = contact.MailingAddress?.state;
-                contact.country = contact.MailingAddress?.country;
-                contact.postalCode = contact.MailingAddress?.postalCode;
-            });
-            console.log(contacts);
-            this.contacts = contacts;
-        })
-        .catch(error => console.log(error));
-    }
+    employeeData = [
+        {
+            employeeId: '1',
+            firstName: 'Richard',
+            lastName: 'Hendricks',
+            employeePhone: '(158) 389-2794',
+            employeeEmail: 'richard@piedpiper.com'
+        },
+        {
+            employeeId: '2',
+            firstName: 'Jared',
+            lastName: 'Dunn',
+            employeePhone: '(518) 390-2749',
+            employeeEmail: 'jared@piedpiper.com'
+        },
+        {
+            employeeId: '3',
+            firstName: 'Erlich',
+            lastName: 'Bachman',
+            employeePhone: '(815) 391-2974',
+            employeeEmail: 'erlich.bachman@piedpiper.com'
+        },
+        {
+            employeeId: '4',
+            firstName: 'Monica',
+            lastName: '',
+            employeePhone: '(427) 481-3858',
+            employeeEmail: 'monica@piedpiper.com'
+        },
+        {
+            employeeId: '5',
+            firstName: 'Laurie',
+            lastName: 'Bream',
+            employeePhone: '(609) 202-1930',
+            employeeEmail: 'laurie.bream@piedpiper.com'
+        },
+        {
+            employeeId: '6',
+            firstName: 'Gilfoyle',
+            lastName: '',
+            employeePhone: '(747) 401-3761',
+            employeeEmail: 'gilfoyle@piedpiper.com'
+        },
+        {
+            employeeId: '7',
+            firstName: 'Russ',
+            lastName: 'Hanneman',
+            employeePhone: '(752) 918-5091',
+            employeeEmail: 'russ.hanneman@piedpiper.com'
+        },
+        {
+            employeeId: '8',
+            firstName: 'Gavin',
+            lastName: 'Belson',
+            employeePhone: '(504) 492-9118',
+            employeeEmail: 'gavin.belson@piedpiper.com'
+        }
+    ];
 }

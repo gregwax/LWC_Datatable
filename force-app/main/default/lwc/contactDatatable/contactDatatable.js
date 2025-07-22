@@ -146,6 +146,14 @@ export default class ContactDatatable extends LightningElement {
 
     // * This method is used to sort records
     sortBy(field, reverse, primer) {
+        /*
+        console.log('sortBy111111111------------------------');
+  
+        console.log(field);
+        console.log(reverse);
+        
+        console.log('sortBy------------------------');
+    */
         const key = primer
         ? function (x) {
             return primer(x[field]);
@@ -156,6 +164,9 @@ export default class ContactDatatable extends LightningElement {
         return function (a, b) {
             a = key(a);
             b = key(b);
+           // console.log(a);
+           // console.log(b);
+
             return reverse * ((a > b) - (b > a));
         };
     }

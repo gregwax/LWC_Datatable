@@ -32,7 +32,9 @@ export default class ContactDatatable extends LightningElement {
                 target: '_blank',
                 tooltip: 'View Contact!'
             },
-            sortable: true
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true
         },
         {
             label: 'Account Name',
@@ -45,44 +47,80 @@ export default class ContactDatatable extends LightningElement {
                 target: '_blank',
                 tooltip: 'View Account!'
             },
-            sortable: true
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true
         },
         {
             label: 'Phone',
             fieldName: 'Phone',
             type: 'phone',
-            sortable: true
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true
         },
         {
             label: 'Email',
             fieldName: 'Email',
             type: 'email',
-            sortable: true
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true
+        },
+        {
+            label: 'Lead Source',
+            fieldName: 'LeadSource',
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true,
+            actions: [
+                { label: 'All', checked: true, name: 'all' },
+                { label: 'Web', checked: false, name: 'web' },
+                { label: 'Phone Inquiry', checked: false, name: 'phone_inquiry' },
+                { label: 'Partner Referral', checked: false, name: 'partner_referral' },
+                { label: 'Purchased List', checked: false, name: 'purchased_list' },
+                { label: 'Other', checked: false, name: 'other' },
+                { label: 'External Referral', checked: false, name: 'external_referral'},
+                { label: 'Partner', checked: false, name: 'partner' },
+                { label: 'Public Relations', checked: false, name: 'public_relations' },
+                { label: 'Trade Show', checked: false, name: 'trade_show' },
+                { label: 'Word of mouth', checked: false, name: 'word_of_mouth' }
+            ]
         },
         {
             label: 'Street',
             fieldName: 'street',
-            sortable: true
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true
         },
         {
             label: 'City',
             fieldName: 'city',
-            sortable: true
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true
         },
         {
             label: 'State',
             fieldName: 'state',
-            sortable: true
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true
         },
         {
             label: 'Country',
             fieldName: 'country',
-            sortable: true
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true
         },
         {
             label: 'PostalCode',
             fieldName: 'postalCode',
-            sortable: true
+            sortable: true,
+            wrapText: true,
+            hideDefaultActions: true
         },
         {
             type: 'action',
@@ -95,6 +133,7 @@ export default class ContactDatatable extends LightningElement {
 
     // * Table Data
     contacts = [];
+    originalContacts = [];
 
     // * Sorting Attributes
     sortedBy = 'Name';
@@ -119,6 +158,7 @@ export default class ContactDatatable extends LightningElement {
             });
             console.log(contacts);
             this.contacts = contacts;
+            this.originalContacts = contacts;
         })
         .catch(error => console.log(error));
     }
@@ -146,17 +186,9 @@ export default class ContactDatatable extends LightningElement {
 
     // * This method is used to sort records
     sortBy(field, reverse, primer) {
-        /*
-        console.log('sortBy111111111------------------------');
-  
-        console.log(field);
-        console.log(reverse);
-        
-        console.log('sortBy------------------------');
-    */
         const key = primer
         ? function (x) {
-            return primer(x[field]);
+            return primer(field, x);
         }
         : function (x) {
             return x[field];
@@ -164,11 +196,33 @@ export default class ContactDatatable extends LightningElement {
         return function (a, b) {
             a = key(a);
             b = key(b);
-           // console.log(a);
-           // console.log(b);
-
+            // * Handling undefined values
+            if(a === b) {
+                return 0;
+            } else if(a === undefined) {
+                return reverse * -1;
+            } else if(b === undefined) {
+                return reverse * 1;
+            }
             return reverse * ((a > b) - (b > a));
         };
+    }
+
+    // * Helper method for sortBy method
+    primer(field, record) {
+        let returnValue;
+        switch (field) {
+            case 'ContactURL':
+                returnValue = record['Name'];
+                break;
+            case 'AccountURL':
+                returnValue = record['AccountName'];
+                break;
+            default:
+                returnValue = record[field];
+                break;
+        }
+        return returnValue;
     }
 
     // * This method will be called whenever a table header is clicked for sorting
@@ -176,9 +230,28 @@ export default class ContactDatatable extends LightningElement {
         console.log(JSON.parse(JSON.stringify(event.detail)));
         const { fieldName: sortedBy, sortDirection: sortedDirection } = event.detail;
         const clonedContacts = [...this.contacts];
-        clonedContacts.sort(this.sortBy(sortedBy, sortedDirection === 'asc' ? 1 : -1));
+        clonedContacts.sort(this.sortBy(sortedBy, sortedDirection === 'asc' ? 1 : -1, this.primer));
         this.contacts = clonedContacts;
         this.sortedBy = sortedBy;
         this.sortedDirection = sortedDirection;
+    }
+
+    // * This method will be called when a header action is clicked
+    handleHeaderAction(event) {
+        console.log(JSON.parse(JSON.stringify(event.detail)));
+        const { action, columnDefinition } = event.detail;
+        const contactColumns = this.contactColumns;
+        const actions = contactColumns.find(contactColumn => contactColumn.fieldName === columnDefinition.fieldName)?.actions;
+        if(actions) {
+            actions.forEach(currentAction => {
+                currentAction.checked = currentAction.name === action.name;
+            });
+            this.contactColumns = [...contactColumns];
+            if(action.name === 'all') {
+                this.contacts = this.originalContacts;
+            } else {
+                this.contacts = this.originalContacts.filter(contact => contact.LeadSource === action.label);
+            }
+        }
     }
 }

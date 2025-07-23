@@ -1,5 +1,6 @@
 import { LightningElement } from 'lwc';
 import getContacts from '@salesforce/apex/ContactDatatableController.getContacts';
+import getContactsCount from '@salesforce/apex/ContactDatatableController.getContactsCount';
 
 export default class ContactDatatable extends LightningElement {
 
@@ -33,8 +34,9 @@ export default class ContactDatatable extends LightningElement {
                 tooltip: 'View Contact!'
             },
             sortable: true,
+            hideDefaultActions: true,
             wrapText: true,
-            hideDefaultActions: true
+            initialWidth: 120
         },
         {
             label: 'Account Name',
@@ -48,30 +50,32 @@ export default class ContactDatatable extends LightningElement {
                 tooltip: 'View Account!'
             },
             sortable: true,
+            hideDefaultActions: true,
             wrapText: true,
-            hideDefaultActions: true
+            initialWidth: 130
         },
         {
             label: 'Phone',
             fieldName: 'Phone',
             type: 'phone',
             sortable: true,
+            hideDefaultActions: true,
             wrapText: true,
-            hideDefaultActions: true
+            initialWidth: 120
         },
         {
             label: 'Email',
             fieldName: 'Email',
             type: 'email',
             sortable: true,
+            hideDefaultActions: true,
             wrapText: true,
-            hideDefaultActions: true
+            initialWidth: 220
         },
         {
             label: 'Lead Source',
             fieldName: 'LeadSource',
             sortable: true,
-            wrapText: true,
             hideDefaultActions: true,
             actions: [
                 { label: 'All', checked: true, name: 'all' },
@@ -85,42 +89,45 @@ export default class ContactDatatable extends LightningElement {
                 { label: 'Public Relations', checked: false, name: 'public_relations' },
                 { label: 'Trade Show', checked: false, name: 'trade_show' },
                 { label: 'Word of mouth', checked: false, name: 'word_of_mouth' }
-            ]
+            ],
+            wrapText: true,
+            initialWidth: 150
         },
         {
             label: 'Street',
             fieldName: 'street',
             sortable: true,
+            hideDefaultActions: true,
             wrapText: true,
-            hideDefaultActions: true
+            initialWidth: 150
         },
         {
             label: 'City',
             fieldName: 'city',
             sortable: true,
-            wrapText: true,
-            hideDefaultActions: true
+            hideDefaultActions: true,
+            wrapText: true
         },
         {
             label: 'State',
             fieldName: 'state',
             sortable: true,
-            wrapText: true,
-            hideDefaultActions: true
+            hideDefaultActions: true,
+            wrapText: true
         },
         {
             label: 'Country',
             fieldName: 'country',
             sortable: true,
-            wrapText: true,
-            hideDefaultActions: true
+            hideDefaultActions: true,
+            wrapText: true
         },
         {
             label: 'PostalCode',
             fieldName: 'postalCode',
             sortable: true,
-            wrapText: true,
-            hideDefaultActions: true
+            hideDefaultActions: true,
+            wrapText: true
         },
         {
             type: 'action',
@@ -133,7 +140,12 @@ export default class ContactDatatable extends LightningElement {
 
     // * Table Data
     contacts = [];
-    originalContacts = [];
+    selectedRows = [];
+    recordsLimit = 10;
+    totalRecordsCount = 0;
+    recordsFilter = {};
+    enableInfiniteLoading = true;
+    isLoading = false;
 
     // * Sorting Attributes
     sortedBy = 'Name';
@@ -142,25 +154,8 @@ export default class ContactDatatable extends LightningElement {
 
     // * This method will be called when the component is inserted in the DOM
     connectedCallback() {
-
-        // * Querying contacts
-        getContacts()
-        .then(contacts => {
-            contacts.forEach(contact => {
-                contact.ContactURL = '/' + contact.Id;
-                contact.AccountURL = '/' + contact.Account?.Id;
-                contact.AccountName = contact.Account?.Name;
-                contact.street = contact.MailingAddress?.street;
-                contact.city = contact.MailingAddress?.city;
-                contact.state = contact.MailingAddress?.state;
-                contact.country = contact.MailingAddress?.country;
-                contact.postalCode = contact.MailingAddress?.postalCode;
-            });
-            console.log(contacts);
-            this.contacts = contacts;
-            this.originalContacts = contacts;
-        })
-        .catch(error => console.log(error));
+        // * Updating total records count and querying contacts
+        this.updateTotalRecordsCount();
     }
 
     // * This method will be called when a row action button is clicked
@@ -248,10 +243,85 @@ export default class ContactDatatable extends LightningElement {
             });
             this.contactColumns = [...contactColumns];
             if(action.name === 'all') {
-                this.contacts = this.originalContacts;
+                this.contacts = [];
+                delete this.recordsFilter[columnDefinition.fieldName];
+                this.updateTotalRecordsCount();
             } else {
-                this.contacts = this.originalContacts.filter(contact => contact.LeadSource === action.label);
+                this.contacts = this.contacts.filter(contact => contact.LeadSource === action.label);
+                this.recordsFilter[columnDefinition.fieldName] = action.label;
+                this.updateTotalRecordsCount();
             }
         }
+    }
+
+    // * This method will be called when a table row is selected
+    handleRowSelection(event) {
+        console.log(event.detail.selectedRows);
+        this.selectedRows = event.detail.selectedRows.map(row => row.Id);
+    }
+
+    /*
+    *   This method is used to load more contacts
+    *   as the user scroll to the last record in the datatable
+    */
+    loadContacts() {
+        console.log('querying contacts...');
+        if(this.contacts.length < this.totalRecordsCount) {
+            this.queryContacts();
+        } else {
+            this.enableInfiniteLoading = false;
+        }
+    }
+
+    /*
+    *   This method is used to update total records count according to the filters applied.
+    *   It'll also call queryContacts() to query records
+    */
+    updateTotalRecordsCount() {
+        this.enableInfiniteLoading = true;
+        const that = this;
+        getContactsCount({
+            recordsFilter: this.recordsFilter
+        })
+        .then(count => {
+            that.totalRecordsCount = count;
+            that.queryContacts();
+        })
+        .catch(error => console.log(error));
+    }
+
+    // * This method is used to query contacts based on the limit, offset and filters applied by the user
+    queryContacts() {
+        const that = this;
+        this.isLoading = true;
+        // * Querying contacts
+        getContacts({
+            queryLimit: this.recordsLimit,
+            queryOffset: this.contacts.length,
+            recordsFilter: this.recordsFilter
+        })
+        .then(contacts => {
+            contacts.forEach(contact => {
+                contact.ContactURL = '/' + contact.Id;
+                contact.AccountURL = '/' + contact.Account?.Id;
+                contact.AccountName = contact.Account?.Name;
+                contact.street = contact.MailingAddress?.street;
+                contact.city = contact.MailingAddress?.city;
+                contact.state = contact.MailingAddress?.state;
+                contact.country = contact.MailingAddress?.country;
+                contact.postalCode = contact.MailingAddress?.postalCode;
+            });
+            console.log(contacts);
+            const selectRows = that.contacts.length === 0;
+            that.contacts = that.contacts.concat(contacts);
+            // * Selecting first 3 rows only
+            if(selectRows) {
+                that.selectedRows = contacts.slice(0,3).map(contact => contact.Id);
+            }
+        })
+        .catch(error => console.log(error))
+        .then(() => {
+            that.isLoading = false;
+        });
     }
 }

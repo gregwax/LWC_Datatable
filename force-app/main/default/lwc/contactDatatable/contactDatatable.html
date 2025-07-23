@@ -1,7 +1,7 @@
 <template>
     <div style="height: 500px;">
         <lightning-datatable
-            key-field="employeeId"
+            key-field="Id"
             data={contacts}
             columns={contactColumns}
             onrowaction={handleRowAction}
@@ -10,8 +10,15 @@
             sorted-direction={sortedDirection}
             default-sort-direction={defaultSortDirection}
             onheaderaction={handleHeaderAction}
+            min-column-width="120"
+            resize-column-disabled
             show-row-number-column
-            hide-checkbox-column>
+            column-widths-mode="fixed"
+            selected-rows={selectedRows}
+            onrowselection={handleRowSelection}
+            is-loading={isLoading}
+            enable-infinite-loading={enableInfiniteLoading}
+            onloadmore={loadContacts}>
         </lightning-datatable>
     </div>
 </template>

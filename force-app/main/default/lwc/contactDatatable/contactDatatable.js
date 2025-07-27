@@ -2,23 +2,11 @@ import { LightningElement } from 'lwc';
 import getContacts from '@salesforce/apex/ContactDatatableController.getContacts';
 import getContactsCount from '@salesforce/apex/ContactDatatableController.getContactsCount';
 
-export default class ContactDatatable extends LightningElement {
+const constants = {
+    PUBLIC_RELATIONS: 'Public Relations'
+};
 
-    // * Table row actions
-    rowActions = [
-        {
-            label: 'View',
-            name: 'view'
-        },
-        {
-            label: 'Edit',
-            name: 'edit'
-        },
-        {
-            label: 'Delete',
-            name: 'delete'
-        }
-    ];
+export default class ContactDatatable extends LightningElement {
 
     // * Table Columns
     contactColumns = [
@@ -36,7 +24,8 @@ export default class ContactDatatable extends LightningElement {
             sortable: true,
             hideDefaultActions: true,
             wrapText: true,
-            initialWidth: 120
+            initialWidth: 120,
+            editable: true
         },
         {
             label: 'Account Name',
@@ -52,7 +41,8 @@ export default class ContactDatatable extends LightningElement {
             sortable: true,
             hideDefaultActions: true,
             wrapText: true,
-            initialWidth: 130
+            initialWidth: 130,
+            editable: true
         },
         {
             label: 'Phone',
@@ -61,7 +51,8 @@ export default class ContactDatatable extends LightningElement {
             sortable: true,
             hideDefaultActions: true,
             wrapText: true,
-            initialWidth: 120
+            initialWidth: 120,
+            editable: true
         },
         {
             label: 'Email',
@@ -70,7 +61,8 @@ export default class ContactDatatable extends LightningElement {
             sortable: true,
             hideDefaultActions: true,
             wrapText: true,
-            initialWidth: 220
+            initialWidth: 220,
+            editable: true
         },
         {
             label: 'Lead Source',
@@ -91,7 +83,8 @@ export default class ContactDatatable extends LightningElement {
                 { label: 'Word of mouth', checked: false, name: 'word_of_mouth' }
             ],
             wrapText: true,
-            initialWidth: 150
+            initialWidth: 150,
+            editable: true
         },
         {
             label: 'Street',
@@ -99,40 +92,45 @@ export default class ContactDatatable extends LightningElement {
             sortable: true,
             hideDefaultActions: true,
             wrapText: true,
-            initialWidth: 150
+            initialWidth: 150,
+            editable: true
         },
         {
             label: 'City',
             fieldName: 'city',
             sortable: true,
             hideDefaultActions: true,
-            wrapText: true
+            wrapText: true,
+            editable: true
         },
         {
             label: 'State',
             fieldName: 'state',
             sortable: true,
             hideDefaultActions: true,
-            wrapText: true
+            wrapText: true,
+            editable: true
         },
         {
             label: 'Country',
             fieldName: 'country',
             sortable: true,
             hideDefaultActions: true,
-            wrapText: true
+            wrapText: true,
+            editable: true
         },
         {
             label: 'PostalCode',
             fieldName: 'postalCode',
             sortable: true,
             hideDefaultActions: true,
-            wrapText: true
+            wrapText: true,
+            editable: true
         },
         {
             type: 'action',
             typeAttributes: {
-                rowActions: this.rowActions,
+                rowActions: this.getRowActions,
                 menuAlignment: 'auto'
             }
         }
@@ -146,11 +144,45 @@ export default class ContactDatatable extends LightningElement {
     recordsFilter = {};
     enableInfiniteLoading = true;
     isLoading = false;
+    draftValues = [];
 
     // * Sorting Attributes
     sortedBy = 'Name';
     sortedDirection = 'asc';
     defaultSortDirection = 'asc';
+
+    // * This method will calculate row actions based on the row data and pass them in the callback method
+    getRowActions(row, doneCallback) {
+
+        // * Table row actions
+        let rowActions = [
+            {
+                label: 'View',
+                name: 'view',
+                iconName: 'action:preview'
+            },
+            {
+                label: 'Edit',
+                name: 'edit',
+                iconName: 'action:edit'
+            }
+        ];
+
+        // * Provide delete option only when Lead Source is not equal to Public Relations
+        if(row['LeadSource'] != constants.PUBLIC_RELATIONS) {
+            rowActions.push({
+                label: 'Delete',
+                name: 'delete',
+                iconName: 'action:delete'
+            });
+        }
+
+        // * Simulating apex callout
+        setTimeout(() => {
+            // * Pass the row actions to the table once they're ready
+            doneCallback(rowActions);
+        }, 1000);
+    }
 
     // * This method will be called when the component is inserted in the DOM
     connectedCallback() {
@@ -323,5 +355,36 @@ export default class ContactDatatable extends LightningElement {
         .then(() => {
             that.isLoading = false;
         });
+    }
+
+    // * This method will be called when inline editing is cancelled
+    handleCancel(event) {
+        console.log(JSON.parse(JSON.stringify(event.detail)));
+    }
+
+    /*
+    *   This method will be called when a single or
+    *   multiple cells are updated in datatable
+    */
+    handleCellUpdate(event) {
+        console.log(JSON.parse(JSON.stringify(event.detail)));
+    }
+
+    /*
+    *   This method will be called when save button is clicked
+    *   during inline editing in the datatable
+    */
+    handleSave(event) {
+        console.log(JSON.parse(JSON.stringify(event.detail)));
+        this.draftValues = [];
+    }
+
+    /*
+    *   This method will be called when inline editing is triggered
+    *   from a separate event outside the datatable
+    */
+    triggerInlineEdit(event) {
+        const dt = this.template.querySelector('lightning-datatable');
+        dt.openInlineEdit();
     }
 }

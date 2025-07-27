@@ -1,4 +1,6 @@
 <template>
+    <lightning-button label="Trigger Inline Edit" onclick={triggerInlineEdit}></lightning-button>
+    <br /><br />
     <div style="height: 500px;">
         <lightning-datatable
             key-field="Id"
@@ -18,7 +20,11 @@
             onrowselection={handleRowSelection}
             is-loading={isLoading}
             enable-infinite-loading={enableInfiniteLoading}
-            onloadmore={loadContacts}>
+            draft-values={draftValues}
+            onloadmore={loadContacts}
+            oncancel={handleCancel}
+            oncellchange={handleCellUpdate}
+            onsave={handleSave}>
         </lightning-datatable>
     </div>
 </template>

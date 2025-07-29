@@ -2,6 +2,10 @@
   "orgName": "Demo company",
   "edition": "Developer",
   "features": ["EnableSetPasswordInApi"],
+<<<<<<< HEAD
+=======
+  "hasSampleData": true,
+>>>>>>> fe10129aacf9d4947b93c5a4b032f3497ddbff6d
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true

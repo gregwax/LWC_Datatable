@@ -7,10 +7,14 @@
 .sfdx/
 .localdevserver/
 deploy-options.json
+<<<<<<< HEAD
 .VSCode
 package.json
 ./pre-commit
 extensions.json
+=======
+
+>>>>>>> fe10129aacf9d4947b93c5a4b032f3497ddbff6d
 # LWC VSCode autocomplete
 **/lwc/jsconfig.json
 

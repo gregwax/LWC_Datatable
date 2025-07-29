@@ -1,9 +1,38 @@
 <template>
+<<<<<<< HEAD
     <div style="height: 250px;">
         <lightning-datatable
             key-field="employeeId"
             data={employeeData}
             columns={employeeColumns}>
+=======
+    <lightning-button label="Trigger Inline Edit" onclick={triggerInlineEdit}></lightning-button>
+    <br /><br />
+    <div style="height: 500px;">
+        <lightning-datatable
+            key-field="Id"
+            data={contacts}
+            columns={contactColumns}
+            onrowaction={handleRowAction}
+            onsort={handleSort}
+            sorted-by={sortedBy}
+            sorted-direction={sortedDirection}
+            default-sort-direction={defaultSortDirection}
+            onheaderaction={handleHeaderAction}
+            min-column-width="120"
+            resize-column-disabled
+            show-row-number-column
+            column-widths-mode="fixed"
+            selected-rows={selectedRows}
+            onrowselection={handleRowSelection}
+            is-loading={isLoading}
+            enable-infinite-loading={enableInfiniteLoading}
+            draft-values={draftValues}
+            onloadmore={loadContacts}
+            oncancel={handleCancel}
+            oncellchange={handleCellUpdate}
+            onsave={handleSave}>
+>>>>>>> fe10129aacf9d4947b93c5a4b032f3497ddbff6d
         </lightning-datatable>
     </div>
 </template>
